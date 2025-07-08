@@ -16,6 +16,7 @@ click==8.2.1
 cryptography==45.0.5
 fastapi==0.115.12
 Flask==3.1.1
+guid==0.2.1
 h11==0.16.0
 idna==3.10
 isodate==0.7.2
