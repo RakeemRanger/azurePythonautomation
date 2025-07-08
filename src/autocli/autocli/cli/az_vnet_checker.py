@@ -34,15 +34,15 @@ class VnetChecker:
             logger.info(f'Resource Group: {rg_name} has been located.')
             logger.info(f'Will now check if VNET: {vnet_name} exist or not')
             try:
-                resuluts = net_client.virtual_networks.get(resource_group_name=rg_name,
+                results = net_client.virtual_networks.get(resource_group_name=rg_name,
                                                            virtual_network_name=vnet_name
                                                            )
                 response = {
-                "name": resuluts.name,
+                "name": results.name,
                 "isProvisioned": True,
-                "provisioningState": resuluts.provisioning_state,
-                "location": resuluts.location,
-                "id": resuluts.id,
+                "provisioningState": results.provisioning_state,
+                "location": results.location,
+                "id": results.id,
                 "ReturnCode": 200,
                 "message": f"Virtual Network: {vnet_name} has been located.",
                 "trackingId": trackingId
