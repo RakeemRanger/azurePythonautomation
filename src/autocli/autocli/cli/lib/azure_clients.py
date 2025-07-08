@@ -18,8 +18,8 @@ class AzureClients:
         self.subscription = os.getenv('AZURE_SUBSCRIPTION_ID')
         self.credentials = DefaultAzureCredential()
 
-    def az_compute_client(self, )-> ComputeManagementClient:
-        return ComputeManagementClient(credential=self.credentials,
+    def az_network_client(self, )-> NetworkManagementClient:
+        return NetworkManagementClient(credential=self.credentials,
                                        subscription_id=self.subscription
                                        )
     
