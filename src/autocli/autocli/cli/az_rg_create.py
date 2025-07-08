@@ -1,6 +1,5 @@
 import json
 
-
 from src.autocli.autocli.cli.az_rg_checker import ResourceGroupChecker
 from src.autocli.autocli.cli.lib.azure_clients import AzureClients
 from src.autocli.autocli.cli.lib.log_util import logClient
