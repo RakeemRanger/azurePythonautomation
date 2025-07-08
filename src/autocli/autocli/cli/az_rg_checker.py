@@ -1,7 +1,4 @@
 import json
-import os
-import uuid
-import requests
 
 from azure.core.exceptions import ResourceNotFoundError
 from src.autocli.autocli.cli.lib.log_util import logClient
