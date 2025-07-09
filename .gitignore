@@ -10,3 +10,6 @@ __pycache__/
 
 # VS Code settings (optional)
 .vscode/
+
+# Ignore CONSTANTS file
+src/autocli/autocli/cli/lib/CONSTANTS.py

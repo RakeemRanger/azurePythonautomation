@@ -77,3 +77,6 @@ class VnetChecker:
                 }
                 logger.info(response)
                 return response
+
+ss = VnetChecker('canadacentral','ad.rg', 'dc01-vnet').vnet_check()
+print(ss)
