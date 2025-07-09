@@ -1,0 +1,2 @@
+[console_scripts]
+autocli = autocli.autocli:main
