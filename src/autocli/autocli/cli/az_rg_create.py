@@ -8,9 +8,9 @@ class ResourceGroupCreator:
     """
     Class to Manage the creation of Resource Groups
     """
-    def __init__(self, rg_name: str, ):
+    def __init__(self, rg_name: str, location: str):
         self.rg_name = rg_name
-        self.location = 'canadacentral'
+        self.location = location
         self.rg_client = AzureClients().az_group_client()
         self.logger = logClient('azureRGcreate')
         self.checker = json.loads(ResourceGroupChecker(self.location, self.rg_name).rg_check())
@@ -25,7 +25,7 @@ class ResourceGroupCreator:
         if rg_exist:
             response = {
                 "name": self.checker["name"],
-                "isProvisioned": True,
+                "isProvisioned": "Yes",
                 "location": self.checker["location"],
                 "id": self.checker["id"],
                 "ReturnCode": 200,
@@ -43,7 +43,7 @@ class ResourceGroupCreator:
                 logger.info(f"Resource Group: {rg_name} created successfully")
                 response = {
                     "name": results.name,
-                    "isProvisioned": True,
+                    "isProvisioned": "Yes",
                     "location": results.location,
                     "id": results.id,
                     "ReturnCode": 200,
