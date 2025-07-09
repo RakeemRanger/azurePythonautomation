@@ -14,10 +14,6 @@ __pycache__/
 # Ignore CONSTANTS file
 src/autocli/autocli/cli/lib/CONSTANTS.py
 
-````markdown
-## .gitignore notes
-
-Make sure to add `autocli.egg-info/` to your `.gitignore` file to prevent build metadata from being tracked by git:
-
-
+# Ignore build metadata
 autocli.egg-info/
+autocli.egg-info/*
