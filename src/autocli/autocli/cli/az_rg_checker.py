@@ -1,67 +1,89 @@
 import json
+import requests
+import os
 
-from azure.core.exceptions import ResourceNotFoundError
-from src.autocli.autocli.cli.lib.log_util import logClient
-from src.autocli.autocli.cli.lib.azure_clients import AzureClients
-from src.autocli.autocli.cli.lib.trackingId_util import TrackingIdGenerator
+from azure.identity import DefaultAzureCredential
+from .lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
+from .lib.log_util import logClient
+from .lib.azure_clients import AzureClients
 
 class ResourceGroupChecker:
     """
-    Class that will handle Resource Group Existence
+    Class that will handle Resource Group Existence using Azure REST API.
     """
-    def __init__(self, location: str, rg_name: str):
+    def __init__(self, location: str, rg_name: str, trackingId: str,):
         self.location = location
         self.rg_name = rg_name
-        self.rg_client = AzureClients().az_group_client()
         self.logger = logClient('azureRGchecker')
-    
-    def rg_check(self, ) -> dict:
-        """
-        Method to check if a resource group exist or not.
-        """
+        self.trackingId = str(trackingId)
+        # You may want to pass subscription_id explicitly, or fetch from env
+        self.subscription_id = DEV_AZURE_SUBSCRIPTION
+
+    def rg_check(self) -> str:
         logger = self.logger
-        trackingId = str(TrackingIdGenerator().trackingId())
-        rg_client = self.rg_client
+        trackingId = self.trackingId
+        rg_name = self.rg_name
+        location = self.location
+        api_client = AzureClients().az_group_api_client(group_name=rg_name, requestType='CHECK')
         try:
-            results = rg_client.resource_groups.get(
-            resource_group_name=self.rg_name
-            )
-            logger.info(f'ResourceGroup: {self.rg_name} was found')
-            response = {
-                "name": results.name,
-                "isProvisioned": True,
-                "location": results.location,
-                "id": results.id,
-                "ReturnCode": 200,
-                "message": f"ResourceGroup: {self.rg_name} was found",
-                "trackingId": trackingId
+            resp = api_client
+            correlation_id = resp.headers.get("x-ms-correlation-request-id", "")
+            if resp.status_code == 200:
+                results = resp.json()
+                logger.info(f'ResourceGroup: {rg_name} was found')
+                response = {
+                    "name": results.get("name"),
+                    "isProvisioned": True,
+                    "location": results.get("location"),
+                    "id": results.get("id"),
+                    "ReturnCode": 200,
+                    "message": f"ResourceGroup: {rg_name} was found",
+                    "trackingId": trackingId,
+                    "correlationid": correlation_id
                 }
-            response = json.dumps(response, indent=4)
-            return response
-        except ResourceNotFoundError as e:
-            response = {
-                "name": self.rg_name,
-                "isProvisioned": False,
-                "location": self.location,
-                "id": "",
-                "ReturnCode": 404,
-                "message": f"Resource Group: {self.rg_name} does not exist:\n{e}",
-                "trackingId": trackingId
+                response = json.dumps(response, indent=4)
+                return response
+            elif resp.status_code == 404:
+                response = {
+                    "name": rg_name,
+                    "isProvisioned": False,
+                    "location": location,
+                    "id": "",
+                    "ReturnCode": 404,
+                    "message": f"Resource Group: {rg_name} does not exist.",
+                    "trackingId": trackingId,
+                    "correlationid": correlation_id
                 }
-            response = json.dumps(response, indent=4)
-            logger.info(response)
-            return response
+                response = json.dumps(response, indent=4)
+                logger.info(response)
+                return response
+            else:
+                logger.error(f'Issue checking for Resource Group: {rg_name}: {resp.text}')
+                response = {
+                    "name": rg_name,
+                    "isProvisioned": "Unknown",
+                    "location": location,
+                    "id": "",
+                    "ReturnCode": resp.status_code,
+                    "message": f"Issue checking for Resource Group: {rg_name}: {resp.text}",
+                    "trackingId": trackingId,
+                    "correlationid": correlation_id
+                }
+                response = json.dumps(response, indent=4)
+                logger.info(response)
+                return response
         except Exception as e:
-            logger.error(f'Issue checking for Resource Group: {self.rg_name}:\n{e}')
+            logger.error(f'Exception checking for Resource Group: {rg_name}:\n{e}')
             response = {
-                "name": self.rg_name,
+                "name": rg_name,
                 "isProvisioned": "Unknown",
-                "location": self.location,
+                "location": location,
                 "id": "",
                 "ReturnCode": 500,
-                "message": f"Issue checking for Resource Group: {self.rg_name}:",
-                "trackingId": trackingId
-                }
+                "message": f"Exception checking for Resource Group: {rg_name}: {e}",
+                "trackingId": trackingId,
+                "correlationid": ""
+            }
             response = json.dumps(response, indent=4)
             logger.info(response)
             return response
