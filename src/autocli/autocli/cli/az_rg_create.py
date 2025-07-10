@@ -98,7 +98,3 @@ class ResourceGroupCreator:
             response = json.dumps(response, indent=4)
             logger.info(response)
             return response
-
-trackid = "e20e3262-53ab-46eb-91ca-9b9d5d6e4b1d"
-ss = ResourceGroupCreator(location='northeurope',rg_name='demo.northeurope.rg', trackingId=trackid).rg_create()
-print(ss)
