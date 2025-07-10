@@ -147,11 +147,6 @@ class VnetCreate:
                     response = json.dumps(response, indent=4)
                     logger.info(response)
                     return response
-
-trackid = TrackingIdGenerator().trackingId()
-print(trackid)
-ss = VnetCreate('eastus2', 'demo.eastus2.rg', vnet_name='demo.eastus2.vnet', trackingId=trackid).vnet_create()
-print(ss)
                 
 
 
