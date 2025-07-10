@@ -1,7 +1,19 @@
 import logging
 import os
+import json
 
-from src.autocli.autocli.cli.lib.CONSTANTS import log_folder
+from autocli.lib.CONSTANTS import log_folder
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        log_record = {
+            "timestamp": self.formatTime(record, self.datefmt),
+            "level": record.levelname,
+            "message": record.getMessage(),
+            "logger": record.name,
+        }
+        # Optionally add more fields from record if needed
+        return json.dumps(log_record)
 
 def logClient(logName: str) -> logging.Logger:
     log_directory = log_folder
@@ -13,8 +25,7 @@ def logClient(logName: str) -> logging.Logger:
     # Prevent adding multiple handlers if logger is called multiple times
     if not logger.handlers:
         file_handler = logging.FileHandler(log_path)
-        # Remove trackingId from formatter to avoid KeyError
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        formatter = JsonFormatter()
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
     return logger

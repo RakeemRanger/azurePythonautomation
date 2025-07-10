@@ -1,29 +1,23 @@
 import os
 import requests
 
-from azure.mgmt.network import NetworkManagementClient
-from azure.mgmt.resource import ResourceManagementClient
 from azure.identity import DefaultAzureCredential
+from azure.mgmt.network import NetworkManagementClient
 
-
+from autocli.lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
 
 class AzureClients:
     '''
     Azure Management clients
     '''
     def __init__(self):
-        self.subscription = os.getenv('AZURE_SUBSCRIPTION_ID')
+        self.subscription = DEV_AZURE_SUBSCRIPTION
         self.credentials = DefaultAzureCredential()
 
-    def az_network_client(self, )-> NetworkManagementClient:
-        return NetworkManagementClient(credential=self.credentials,
-                                       subscription_id=self.subscription
-                                       )
-    
-    def az_group_sdk_client(self, ) -> ResourceManagementClient:
-        return ResourceManagementClient(credential=self.credentials,
-                                        subscription_id=self.subscription
-                                        )
+    def az_network_client(self):
+        credential = DefaultAzureCredential()
+        subscription =  self.subscription
+        return NetworkManagementClient(credential,subscription_id=subscription)
     
     def az_group_api_client(self, group_name: str, requestType: str, body: dict = None):
         credential = self.credentials
