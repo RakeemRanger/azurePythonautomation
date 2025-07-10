@@ -1,5 +1,6 @@
 annotated-types==0.7.0
 anyio==4.9.0
+-e git+https://github.com/RakeemRanger/azurePythonautomation.git@1e491fd690209157e97d4120f198c620c7327820#egg=autocli
 azure-common==1.1.28
 azure-core==1.34.0
 azure-identity==1.23.0
@@ -32,6 +33,7 @@ pydantic==2.11.5
 pydantic_core==2.33.2
 PyJWT==2.10.1
 requests==2.32.4
+setuptools==80.9.0
 six==1.17.0
 sniffio==1.3.1
 starlette==0.46.2

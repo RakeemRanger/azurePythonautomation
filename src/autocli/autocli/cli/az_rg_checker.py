@@ -1,26 +1,27 @@
 import json
 
 from azure.core.exceptions import ResourceNotFoundError
-from src.autocli.autocli.cli.lib.log_util import logClient
-from src.autocli.autocli.cli.lib.azure_clients import AzureClients
-from src.autocli.autocli.cli.lib.trackingId_util import TrackingIdGenerator
+
+from .lib.log_util import logClient
+from .lib.azure_clients import AzureClients
 
 class ResourceGroupChecker:
     """
     Class that will handle Resource Group Existence
     """
-    def __init__(self, location: str, rg_name: str):
+    def __init__(self, location: str, rg_name: str, trackingId: str):
         self.location = location
         self.rg_name = rg_name
         self.rg_client = AzureClients().az_group_client()
         self.logger = logClient('azureRGchecker')
+        self.trackingId = trackingId
     
     def rg_check(self, ) -> dict:
         """
         Method to check if a resource group exist or not.
         """
         logger = self.logger
-        trackingId = str(TrackingIdGenerator().trackingId())
+        trackingId = self.trackingId
         rg_client = self.rg_client
         try:
             results = rg_client.resource_groups.get(

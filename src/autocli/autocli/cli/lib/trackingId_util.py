@@ -9,4 +9,4 @@ class TrackingIdGenerator:
         self.uuid =  uuid.uuid4()
 
     def trackingId(self, ):
-        return self.uuid
+        return str(self.uuid)

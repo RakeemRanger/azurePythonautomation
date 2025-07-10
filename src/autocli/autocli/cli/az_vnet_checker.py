@@ -2,23 +2,23 @@ import json
 
 from azure.core.exceptions import ResourceNotFoundError
 
-from src.autocli.autocli.cli.az_rg_checker import ResourceGroupChecker
-from src.autocli.autocli.cli.lib.azure_clients import AzureClients
-from src.autocli.autocli.cli.lib.log_util import logClient
-from src.autocli.autocli.cli.lib.trackingId_util import TrackingIdGenerator
+from .az_rg_checker import ResourceGroupChecker
+from .lib.azure_clients import AzureClients
+from .lib.log_util import logClient
 
 class VnetChecker:
     ''''
     Class to check if virtual network resources are available.
     '''
-    def __init__(self, location: str, rg_name: str, vnet_name: str) -> None:
+    def __init__(self, location: str, rg_name: str, vnet_name: str, trackingId: str) -> None:
         self.net_client = AzureClients().az_network_client()
+        self.trackingId = trackingId
         self.location = location
         self.rg_name = rg_name
         self.vnet_name = vnet_name
         self.logger = logClient('azureVNETchecker')
         self.rg_check = ResourceGroupChecker(location=self.location,
-                                             rg_name=self.rg_name)
+                                             rg_name=self.rg_name, trackingId=self.trackingId)
 
     def vnet_check(self,) -> dict:
         rg_name = self.rg_name
@@ -26,7 +26,7 @@ class VnetChecker:
         logger = self.logger
         vnet_name = self.vnet_name
         net_client = self.net_client
-        trackingId = str(TrackingIdGenerator().trackingId())
+        trackingId = self.trackingId
         logger.info(f'''starting Virtual Network Check Operation for VNET: {vnet_name}\n
                     {{"trackingId": {trackingId}}}''')
         rg_exist = self.rg_check

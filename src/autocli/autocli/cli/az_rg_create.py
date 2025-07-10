@@ -1,22 +1,23 @@
 import json
 
-from src.autocli.autocli.cli.az_rg_checker import ResourceGroupChecker
-from src.autocli.autocli.cli.lib.azure_clients import AzureClients
-from src.autocli.autocli.cli.lib.log_util import logClient
+from .az_rg_checker import ResourceGroupChecker
+from .lib.azure_clients import AzureClients
+from .lib.log_util import logClient
 
 class ResourceGroupCreator:
     """
     Class to Manage the creation of Resource Groups
     """
-    def __init__(self, rg_name: str, location: str):
+    def __init__(self, rg_name: str, location: str, trackingId: str):
         self.rg_name = rg_name
+        self.trackingId = trackingId
         self.location = location
         self.rg_client = AzureClients().az_group_client()
         self.logger = logClient('azureRGcreate')
-        self.checker = json.loads(ResourceGroupChecker(self.location, self.rg_name).rg_check())
+        self.checker = json.loads(ResourceGroupChecker(self.location, self.rg_name, trackingId=self.trackingId).rg_check())
 
     def rg_create(self,) -> dict:
-        trackingId = self.checker['trackingId']
+        trackingId = self.trackingId
         rg_exist = self.checker["isProvisioned"]
         rg_name = self.rg_name
         logger = self.logger
@@ -63,6 +64,7 @@ class ResourceGroupCreator:
                     "message": f"Issue creating Resource Group: {self.rg_name}:\n{e}",
                     "trackingId": trackingId
                 }
+                print(response)
                 response = json.dumps(response, indent=4)
                 logger.info(response)
                 return response

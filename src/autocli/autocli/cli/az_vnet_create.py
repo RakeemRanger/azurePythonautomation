@@ -1,25 +1,25 @@
 import json
 import ipaddress
 
-from src.autocli.autocli.cli.az_rg_checker import ResourceGroupChecker
-from src.autocli.autocli.cli.az_rg_create import ResourceGroupCreator
-from src.autocli.autocli.cli.az_vnet_checker import VnetChecker
-from src.autocli.autocli.cli.lib.azure_clients import AzureClients
-from src.autocli.autocli.cli.lib.log_util import logClient
-from src.autocli.autocli.cli.lib.trackingId_util import TrackingIdGenerator
+from .az_rg_checker import ResourceGroupChecker
+from .az_rg_create import ResourceGroupCreator
+from .az_vnet_checker import VnetChecker
+from .lib.azure_clients import AzureClients
+from .lib.log_util import logClient
+from .lib.trackingId_util import TrackingIdGenerator
 
 class VnetCreate:
     ''''
     Class to check if virtual network resources are available.
     '''
-    def __init__(self, location: str, rg_name: str, vnet_name: str) -> None:
+    def __init__(self, location: str, rg_name: str, vnet_name: str, trackingId: str) -> None:
         self.net_client = AzureClients().az_network_client()
+        self.trackingId = trackingId
         self.location = location
         self.rg_name = rg_name
         self.vnet_name = vnet_name
         self.logger = logClient('azureVNETcreator')
-        self.rg_check = ResourceGroupChecker(location=self.location,
-                                             rg_name=self.rg_name)
+        self.rg_check = ResourceGroupChecker(location=self.location, rg_name=self.rg_name, trackingId=self.trackingId)
 
     def prefix_builder(self) -> str:
         """
@@ -56,12 +56,12 @@ class VnetCreate:
         logger = self.logger
         vnet_name = self.vnet_name
         net_client = self.net_client
-        trackingId = str(TrackingIdGenerator().trackingId())
+        trackingId = self.trackingId
         logger.info(f'''starting Virtual Network Check Operation for VNET: {vnet_name}\n
                     {{"trackingId": {trackingId}}}''')
         rg_exist = self.rg_check
         vnet_prefix = self.prefix_builder()
-        vnet_check = VnetChecker(location=location, rg_name=rg_name, vnet_name=vnet_name).vnet_check()
+        vnet_check = VnetChecker(location=location, rg_name=rg_name, vnet_name=vnet_name, trackingId=trackingId).vnet_check()
         if isinstance(vnet_check, str):
             vnet_check = json.loads(vnet_check)
         vnet_properties = {"addressSpace": {"addressPrefixes":[vnet_prefix]} }
@@ -109,7 +109,7 @@ class VnetCreate:
                     logger.info(response)
                     return response
         else:
-            rg_create = ResourceGroupCreator(f'demo.{location}.rg', location).rg_create()
+            rg_create = ResourceGroupCreator(f'demo.{location}.rg', location, trackingId=trackingId).rg_create()
             rg_create = json.loads(rg_create)
             if rg_create["isProvisioned"] == 'Yes' and rg_create["name"] == rg_name:
                 logger.info(f"Resource Group: {rg_name} created succesfully.")
@@ -147,5 +147,13 @@ class VnetCreate:
                     response = json.dumps(response, indent=4)
                     logger.info(response)
                     return response
+
+trackid = TrackingIdGenerator().trackingId()
+print(trackid)
+ss = VnetCreate('eastus2', 'demo.eastus2.rg', vnet_name='demo.eastus2.vnet', trackingId=trackid).vnet_create()
+print(ss)
+                
+
+
 
 
