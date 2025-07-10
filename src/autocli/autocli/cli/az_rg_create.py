@@ -1,72 +1,104 @@
 import json
+import requests
+import os
+import time
 
-from .az_rg_checker import ResourceGroupChecker
-from .lib.azure_clients import AzureClients
+from azure.identity import DefaultAzureCredential
+from .lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
 from .lib.log_util import logClient
+from .lib.azure_clients import AzureClients
 
 class ResourceGroupCreator:
     """
-    Class to Manage the creation of Resource Groups
+    Class to handle Resource Group creation using Azure REST API.
     """
     def __init__(self, rg_name: str, location: str, trackingId: str):
         self.rg_name = rg_name
-        self.trackingId = trackingId
         self.location = location
-        self.rg_client = AzureClients().az_group_client()
+        self.trackingId = str(trackingId)
         self.logger = logClient('azureRGcreate')
-        self.checker = json.loads(ResourceGroupChecker(self.location, self.rg_name, trackingId=self.trackingId).rg_check())
+        self.subscription_id = DEV_AZURE_SUBSCRIPTION
 
-    def rg_create(self,) -> dict:
-        trackingId = self.trackingId
-        rg_exist = self.checker["isProvisioned"]
-        rg_name = self.rg_name
+    def rg_create(self) -> str:
         logger = self.logger
-        rg_client = self.rg_client
+        trackingId = self.trackingId
+        rg_name = self.rg_name
         location = self.location
-        if rg_exist:
-            response = {
-                "name": self.checker["name"],
-                "isProvisioned": "Yes",
-                "location": self.checker["location"],
-                "id": self.checker["id"],
-                "ReturnCode": 200,
-                "message": f"ResourceGroup: {rg_name} was found",
-                "trackingId": trackingId
+        api_client = AzureClients().az_group_api_client(
+            group_name=rg_name,
+            requestType='CREATE',
+            body={"location": location}
+        )
+        try:
+            resp = api_client
+            correlation_id = resp.headers.get("x-ms-correlation-request-id", "")
+            if resp.status_code in (200, 201):
+                # Poll for provisioningState Succeeded
+                poll_attempts = 30
+                poll_interval = 2  # seconds
+                rg_status = None
+                for _ in range(poll_attempts):
+                    status_resp = AzureClients().az_group_api_client(
+                        group_name=rg_name,
+                        requestType='check'
+                    )
+                    if status_resp.status_code == 200:
+                        rg_status = status_resp.json()
+                        state = rg_status.get("properties", {}).get("provisioningState")
+                        if state == "Succeeded":
+                            break
+                        elif state in ("Failed", "Canceled"):
+                            logger.error(f"Provisioning failed: {state}")
+                            break
+                    time.sleep(poll_interval)
+                else:
+                    state = rg_status.get("properties", {}).get("provisioningState") if rg_status else "Unknown"
+
+                logger.info(f"ResourceGroup: {rg_name} was created with provisioningState: {state}")
+                response = {
+                    "name": rg_status.get("name") if rg_status else rg_name,
+                    "isProvisioned": "Yes" if state == "Succeeded" else "No",
+                    "location": rg_status.get("location") if rg_status else location,
+                    "id": rg_status.get("id") if rg_status else "",
+                    "ReturnCode": resp.status_code,
+                    "message": f"ResourceGroup: {rg_name} was created with provisioningState: {state}",
+                    "trackingId": trackingId,
+                    "correlationid": correlation_id
                 }
+                response = json.dumps(response, indent=4)
+                logger.info(response)
+                return response
+            else:
+                logger.error(f"Issue creating Resource Group: {rg_name}: {resp.text}")
+                response = {
+                    "name": rg_name,
+                    "isProvisioned": "Unknown",
+                    "location": location,
+                    "id": "",
+                    "ReturnCode": resp.status_code,
+                    "message": f"Issue creating Resource Group: {rg_name}: {resp.text}",
+                    "trackingId": trackingId,
+                    "correlationid": correlation_id
+                }
+                response = json.dumps(response, indent=4)
+                logger.info(response)
+                return response
+        except Exception as e:
+            logger.error(f"Exception creating Resource Group: {rg_name}:\n{e}")
+            response = {
+                "name": rg_name,
+                "isProvisioned": "Unknown",
+                "location": location,
+                "id": "",
+                "ReturnCode": 500,
+                "message": f"Exception creating Resource Group: {rg_name}: {e}",
+                "trackingId": trackingId,
+                "correlationid": ""
+            }
             response = json.dumps(response, indent=4)
             logger.info(response)
             return response
-        else:
-            logger.info(f"Starting Resource Group Creation for resource group: {rg_name}")
-            try:
-                results = rg_client.resource_groups.create_or_update(resource_group_name=rg_name,
-                                                                     parameters={"location": location})
-                logger.info(f"Resource Group: {rg_name} created successfully")
-                response = {
-                    "name": results.name,
-                    "isProvisioned": "Yes",
-                    "location": results.location,
-                    "id": results.id,
-                    "ReturnCode": 200,
-                    "message": f"ResourceGroup: {rg_name} was created successfully",
-                    "trackingId": trackingId
-                    }
-                response = json.dumps(response, indent=4)
-                logger.info(response)
-                return response
-            except Exception as e:
-                response = {
-                    "name": self.rg_name,
-                    "isProvisioned": False,
-                    "location": self.location,
-                    "id": "",
-                    "ReturnCode": 500,
-                    "message": f"Issue creating Resource Group: {self.rg_name}:\n{e}",
-                    "trackingId": trackingId
-                }
-                print(response)
-                response = json.dumps(response, indent=4)
-                logger.info(response)
-                return response
 
-        
+trackid = "e20e3262-53ab-46eb-91ca-9b9d5d6e4b1d"
+ss = ResourceGroupCreator(location='northeurope',rg_name='demo.northeurope.rg', trackingId=trackid).rg_create()
+print(ss)

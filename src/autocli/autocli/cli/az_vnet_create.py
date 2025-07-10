@@ -1,25 +1,23 @@
 import json
 import ipaddress
+import time
 
 from .az_rg_checker import ResourceGroupChecker
-from .az_rg_create import ResourceGroupCreator
-from .az_vnet_checker import VnetChecker
-from .lib.azure_clients import AzureClients
+from .lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
 from .lib.log_util import logClient
-from .lib.trackingId_util import TrackingIdGenerator
+from .lib.azure_clients import AzureClients
 
-class VnetCreate:
-    ''''
-    Class to check if virtual network resources are available.
-    '''
-    def __init__(self, location: str, rg_name: str, vnet_name: str, trackingId: str) -> None:
-        self.net_client = AzureClients().az_network_client()
-        self.trackingId = trackingId
-        self.location = location
+class VirtualNetworkCreator:
+    """
+    Class to handle Virtual Network creation using Azure REST API.
+    """
+    def __init__(self, rg_name: str, location: str, vnet_name: str, trackingId: str):
         self.rg_name = rg_name
+        self.location = location
         self.vnet_name = vnet_name
-        self.logger = logClient('azureVNETcreator')
-        self.rg_check = ResourceGroupChecker(location=self.location, rg_name=self.rg_name, trackingId=self.trackingId)
+        self.trackingId = str(trackingId)
+        self.logger = logClient('azureVNETcreate')
+        self.subscription_id = DEV_AZURE_SUBSCRIPTION
 
     def prefix_builder(self) -> str:
         """
@@ -27,7 +25,7 @@ class VnetCreate:
         Returns the next available /16 prefix as a string (e.g., '10.21.0.0/16').
         """
         logger = self.logger
-        net_client = self.net_client
+        net_client = AzureClients().az_network_client()
         logger.info('Fetching next usable VNET prefix')
         try:
             vnet_prefixes = []
@@ -38,117 +36,132 @@ class VnetCreate:
             if not vnet_prefixes:
                 logger.info('No existing /16 VNET prefixes found, using default 10.0.0.0/16.')
                 return '10.0.0.0/16'
-            # Sort prefixes numerically
             vnet_prefixes.sort(key=lambda x: int(ipaddress.IPv4Network(x).network_address))
             last_prefix = vnet_prefixes[-1]
             last_network = ipaddress.IPv4Network(last_prefix)
-            # Add 65536 IPs (1 /16 block) to the last network
             next_network = ipaddress.IPv4Network((int(last_network.network_address) + 65536, 16))
             logger.info(f'Next available VNET prefix: {next_network.with_prefixlen}')
             return next_network.with_prefixlen
         except Exception as e:
             logger.error(f"Error fetching next VNET prefix: {e}")
             return '10.0.0.0/16'
-        
-    def vnet_create(self,) -> dict:
+
+    def vnet_create(self) -> str:
+        logger = self.logger
+        trackingId = self.trackingId
         rg_name = self.rg_name
         location = self.location
-        logger = self.logger
         vnet_name = self.vnet_name
-        net_client = self.net_client
-        trackingId = self.trackingId
-        logger.info(f'''starting Virtual Network Check Operation for VNET: {vnet_name}\n
-                    {{"trackingId": {trackingId}}}''')
-        rg_exist = self.rg_check
-        vnet_prefix = self.prefix_builder()
-        vnet_check = VnetChecker(location=location, rg_name=rg_name, vnet_name=vnet_name, trackingId=trackingId).vnet_check()
-        if isinstance(vnet_check, str):
-            vnet_check = json.loads(vnet_check)
-        vnet_properties = {"addressSpace": {"addressPrefixes":[vnet_prefix]} }
-        vnet_params = {"location": location,  "properties": vnet_properties}
-        if rg_exist == 'Yes':
-            logger.info(f'Resource Group: {rg_name} has been located.')
-            logger.info(f'Will now check if VNET: {vnet_name} exist or not')
-            if vnet_check["isProvisioned"]:
-                print(vnet_check["isProvisioned"])
-                logger.info(f"I have located Virtual Network: {vnet_name}")
-                logger.info(f'Virtual Network {vnet_name} was found, nothing to do')
-                return vnet_check
-            else:
-                try:
-                    results = net_client.virtual_networks.begin_create_or_update(resource_group_name=rg_name,
-                                                           virtual_network_name=vnet_name, parameters=vnet_params
-                                                           ).result()
-                    response = {
-                    "name": results.name,
-                    "resourceGroup": rg_name,
-                    "isProvisioned": "Yes",
-                    "provisioningState": results.provisioning_state,
-                    "location": results.location,
-                    "id": results.id,
-                    "ReturnCode": 200,
-                    "message": f"Virtual Network: {vnet_name} created succesfully.",
-                    "trackingId": trackingId
-                    }
-                    response = json.dumps(response, indent=4)
-                    logger.info(response)
-                    return response
-                except Exception as e:
-                    response = {
-                    "name": rg_name,
-                    "resourceGroup": rg_name,
-                    "isProvisioned": "Unknown",
-                    "provisioningState": "Unknown",
-                    "location": location,
-                    "id": "",
-                    "ReturnCode": 500,
-                    "message": f"Issue creating Virtual Network: {vnet_name}:\n{e}",
-                    "trackingId": trackingId
-                    }
-                    response = json.dumps(response, indent=4)
-                    logger.info(response)
-                    return response
+
+        # Check if VNet exists first
+        check_resp = AzureClients().az_vnet_api_client(
+            group_name=rg_name,
+            vnet_name=vnet_name,
+            requestType='check'
+        )
+        if check_resp.status_code == 200:
+            # VNet exists, use its current prefix
+            vnet_status = check_resp.json()
+            address_prefixes = vnet_status.get("properties", {}).get("addressSpace", {}).get("addressPrefixes", [])
+            vnet_prefix = address_prefixes[0] if address_prefixes else self.prefix_builder()
         else:
-            rg_create = ResourceGroupCreator(f'demo.{location}.rg', location, trackingId=trackingId).rg_create()
-            rg_create = json.loads(rg_create)
-            if rg_create["isProvisioned"] == 'Yes' and rg_create["name"] == rg_name:
-                logger.info(f"Resource Group: {rg_name} created succesfully.")
-                logger.info(f"Moving on to creating Virtual Network: {vnet_name}")
-                try:
-                    results = net_client.virtual_networks.begin_create_or_update(resource_group_name=rg_name,
-                                                           virtual_network_name=vnet_name, parameters=vnet_params
-                                                           ).result()
-                    response = {
-                    "name": results.name,
+            # VNet does not exist, use next available prefix
+            vnet_prefix = self.prefix_builder()
+
+        vnet_body = {
+            "location": location,
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [vnet_prefix]
+                }
+            }
+        }
+
+        api_client = AzureClients().az_vnet_api_client(
+            group_name=rg_name,
+            vnet_name=vnet_name,
+            requestType='CREATE',
+            body=vnet_body
+        )
+        try:
+            resp = api_client
+            correlation_id = resp.headers.get("x-ms-correlation-request-id", "")
+            if resp.status_code in (200, 201):
+                # Poll for provisioningState Succeeded
+                poll_attempts = 30
+                poll_interval = 2  # seconds
+                vnet_status = None
+                for _ in range(poll_attempts):
+                    status_resp = AzureClients().az_vnet_api_client(
+                        group_name=rg_name,
+                        vnet_name=vnet_name,
+                        requestType='check'
+                    )
+                    if status_resp.status_code == 200:
+                        vnet_status = status_resp.json()
+                        state = vnet_status.get("properties", {}).get("provisioningState")
+                        address_prefixes = vnet_status.get("properties", {}).get("addressSpace", {}).get("addressPrefixes", [])
+                        vnet_prefix = address_prefixes[0] if address_prefixes else vnet_prefix
+                        if state == "Succeeded":
+                            break
+                        elif state in ("Failed", "Canceled"):
+                            logger.error(f"Provisioning failed: {state}")
+                            break
+                    time.sleep(poll_interval)
+                else:
+                    state = vnet_status.get("properties", {}).get("provisioningState") if vnet_status else "Unknown"
+
+                logger.info(f"Virtual Network: {vnet_name} was created with provisioningState: {state}")
+                response = {
+                    "name": vnet_status.get("name") if vnet_status else vnet_name,
+                    'addressPrefix': vnet_prefix,
                     "resourceGroup": rg_name,
-                    "isProvisioned": "Yes",
-                    "provisioningState": results.provisioning_state,
-                    "location": results.location,
-                    "id": results.id,
-                    "ReturnCode": 200,
-                    "message": f"Virtual Network: {vnet_name} created succesfully.",
-                    "trackingId": trackingId
-                    }
-                    response = json.dumps(response, indent=4)
-                    logger.info(response)
-                    return response
-                except Exception as e:
-                    response = {
+                    "isProvisioned": "Yes" if state == "Succeeded" else "No",
+                    "provisioningState": state,
+                    "location": vnet_status.get("location") if vnet_status else location,
+                    "id": vnet_status.get("id") if vnet_status else "",
+                    "ReturnCode": resp.status_code,
+                    "message": f"Virtual Network: {vnet_name} was created with provisioningState: {state}",
+                    "trackingId": trackingId,
+                    "correlationid": correlation_id
+                }
+                response = json.dumps(response, indent=4)
+                logger.info(response)
+                return response
+            else:
+                logger.error(f"Issue creating Virtual Network: {vnet_name}: {resp.text}")
+                response = {
                     "name": vnet_name,
+                    'addressPrefix': "Unknown",
                     "resourceGroup": rg_name,
                     "isProvisioned": "Unknown",
                     "provisioningState": "Unknown",
                     "location": location,
                     "id": "",
-                    "ReturnCode": 500,
-                    "message": f"Issue creating Virtual Network: {vnet_name}:\n{e}",
-                    "trackingId": trackingId
-                    }
-                    response = json.dumps(response, indent=4)
-                    logger.info(response)
-                    return response
-                
-
-
-
+                    "ReturnCode": resp.status_code,
+                    "message": f"Issue creating Virtual Network: {vnet_name}: {resp.text}",
+                    "trackingId": trackingId,
+                    "correlationid": correlation_id
+                }
+                response = json.dumps(response, indent=4)
+                logger.info(response)
+                return response
+        except Exception as e:
+            logger.error(f"Exception creating Virtual Network: {vnet_name}:\n{e}")
+            response = {
+                "name": vnet_name,
+                'addressPrefix': "Unknown",
+                "resourceGroup": rg_name,
+                "isProvisioned": "Unknown",
+                "provisioningState": "Unknown",
+                "location": location,
+                "id": "",
+                "ReturnCode": 500,
+                "message": f"Exception creating Virtual Network: {vnet_name}: {e}",
+                "trackingId": trackingId,
+                "correlationid": ""
+            }
+            response = json.dumps(response, indent=4)
+            logger.info(response)
+            return response
 
