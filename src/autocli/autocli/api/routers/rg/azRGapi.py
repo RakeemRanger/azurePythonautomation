@@ -2,8 +2,8 @@ import json
 
 from fastapi import FastAPI, APIRouter
 
-from autocli.core.az_vnet_checker import ResourceGroupChecker
-from autocli.core.az_vnet_create import ResourceGroupCreator
+from autocli.core.rg.az_rg_checker import ResourceGroupChecker
+from autocli.core.network.vnets.az_vnet_create import ResourceGroupCreator
 from autocli.core.lib.trackingId_util import TrackingIdGenerator
 
 trackId = TrackingIdGenerator().trackingId()

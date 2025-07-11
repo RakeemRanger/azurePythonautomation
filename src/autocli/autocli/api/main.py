@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from autocli.api.azVnetapi import router as vnetRouter
-from autocli.api.azRGapi import router as rgRouter
+from autocli.api.routers.network.vnet.azVnetapi  import router as vnetRouter
+from autocli.api.routers.rg.azRGapi import router as rgRouter
 
 app = FastAPI()
 

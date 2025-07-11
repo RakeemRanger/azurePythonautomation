@@ -30,16 +30,40 @@ This folder contains the FastAPI-based REST API endpoints for the AzureAutomatio
 ## Structure
 
 ```
-api/
-├── azVnetapi.py   # VNet-related endpoints (APIRouter)
-├── azRGapi.py     # Resource Group-related endpoints (APIRouter)
-├── main.py        # FastAPI app, includes all routers
-└── readme.md
+(rranger) nodebrite@nodebrite-ThinkPad-E14-Gen-5:~/Desktop/AzureAutomatioin/src/autocli/autocli/api$ tree -a
+.
+├── __init__.py
+├── main.py
+├── models
+│   ├── network
+│   │   ├── __init__.py
+│   │   └── vnet
+│   │       └── __init__.py
+│   └── rg
+│       └── __init__.py
+├── __pycache__
+│   ├── azRGapi.cpython-312.pyc
+│   ├── azVnetapi.cpython-312.pyc
+│   ├── __init__.cpython-312.pyc
+│   └── main.cpython-312.pyc
+├── readme.md
+├── routerGenerator.py
+├── routers
+│   ├── network
+│   │   └── vnet
+│   │       └── azVnetapi.py
+│   └── rg
+│       └── azRGapi.py
+└── utils
+    ├── auth.py
+    ├── errors.py
+    └── __init__.py
 ```
 
-- Each API module (e.g., `azVnetapi.py`, `azRGapi.py`) defines an `APIRouter` with endpoints for a specific resource type.
-- All routers are included in a single FastAPI app via `main.py`.
-- The API layer does not contain business logic; it simply calls into the `core/` module.
+- Routers are organized by resource type in `network/vnet/azVnetapi.py` and `rg/azRGapi.py`.
+- Models are grouped in `models/network/vnet/` and `models/rg/`.
+- Shared utilities are in the `utils/` folder.
+- `main.py` imports and includes all routers for the FastAPI app.
 
 ---
 
