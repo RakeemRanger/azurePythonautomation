@@ -19,7 +19,7 @@ class ResourceGroupCreator:
         self.trackingId = str(trackingId)
         self.logger = logClient("azureRGcreate")
         self.subscription_id = DEV_AZURE_SUBSCRIPTION
-        self.password = "1234"
+        self.password = "12345"
 
     def rg_create(self) -> dict:
         logger = self.logger
