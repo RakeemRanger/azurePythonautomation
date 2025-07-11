@@ -127,27 +127,33 @@ AzureAutomatioin/
 ├── src/
 │   └── autocli/
 │       ├── core/
-│       │   ├── az_rg_create.py
-│       │   ├── az_rg_checker.py
-│       │   ├── az_vnet_create.py
-│       │   ├── az_vnet_checker.py
-│       │   └── ...
+│       │   ├── network/
+│       │   │   └── vnets/
+│       │   │       ├── az_vnet_checker.py
+│       │   │       ├── az_vnet_create.py
+│       │   ├── rg/
+│       │   │   ├── az_rg_checker.py
+│       │   │   ├── az_rg_create.py
+│       │   ├── lib/
+│       │   │   ├── azure_clients.py
+│       │   │   ├── log_util.py
+│       │   │   ├── trackingId_util.py
+│       │   │   └── CONSTANTS.py
 │       ├── cli/
-│       │   ├── cli.py
-│       │   └── ...
+│       │   └── cli.py
 │       ├── api/
 │       │   ├── azVnetapi.py
 │       │   ├── azRGapi.py
 │       │   ├── main.py
-│       │   └── ...
-│       └── lib/
-│           ├── azure_clients.py
-│           ├── log_util.py
-│           ├── trackingId_util.py
-│           └── ...
+│       └── readme.md
 ├── logs/
+├── .github/
+│   └── workflows/
+│       ├── black-check.yml
+│       ├── secrets-scan.yml
+│       └── flake8-unused.yml
 ├── .gitignore
-└── README.md
+└── requirements.txt
 ```
 
 ---

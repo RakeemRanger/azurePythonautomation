@@ -23,10 +23,19 @@ This folder contains the FastAPI-based REST API endpoints for the AzureAutomatio
     - For any production or public deployment, you must implement proper authentication and authorization.
     - **OAuth2 with JWT Bearer tokens** is the recommended approach for securing FastAPI APIs in production.
     - This ensures robust, standards-based security for your endpoints.
+    - Also consider adding rate limiting, logging, monitoring, and error handling.
 
 ---
 
 ## Structure
+
+```
+api/
+├── azVnetapi.py   # VNet-related endpoints (APIRouter)
+├── azRGapi.py     # Resource Group-related endpoints (APIRouter)
+├── main.py        # FastAPI app, includes all routers
+└── readme.md
+```
 
 - Each API module (e.g., `azVnetapi.py`, `azRGapi.py`) defines an `APIRouter` with endpoints for a specific resource type.
 - All routers are included in a single FastAPI app via `main.py`.
@@ -38,7 +47,7 @@ This folder contains the FastAPI-based REST API endpoints for the AzureAutomatio
 
 - Start the API for development:
     ```sh
-    uvicorn autocli.cli.api.main:app --reload
+    uvicorn autocli.autocli.api.main:app --reload
     ```
 - Access the interactive docs at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
@@ -49,6 +58,15 @@ This folder contains the FastAPI-based REST API endpoints for the AzureAutomatio
 - The current API is not hardened for security, rate limiting, or error handling.
 - Always implement proper authentication (OAuth2/JWT), logging, and monitoring before deploying to production.
 - For production, logs should be configured for ingestion into log analytics platforms, and all endpoints should be protected with robust authentication and authorization.
+
+---
+
+## Best Practices
+
+- Keep API modules focused on routing and HTTP interface logic.
+- Delegate all Azure operations to the core business logic for consistency.
+- Use FastAPI's dependency injection for authentication and validation.
+- Document endpoints using FastAPI's built-in OpenAPI docs.
 
 ---
 
