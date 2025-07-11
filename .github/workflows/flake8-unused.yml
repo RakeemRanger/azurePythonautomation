@@ -1,0 +1,26 @@
+name: Flake8 Unused Imports and Variables Check
+
+on:
+  pull_request:
+    paths:
+      - '**/*.py'
+
+jobs:
+  flake8-unused:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install flake8 and plugins
+        run: |
+          pip install flake8 flake8-unused-imports flake8-unused-arguments
+
+      - name: Run flake8 for unused imports and variables
+        run: |
+          flake8 --select=F401,F841 --show-source .
