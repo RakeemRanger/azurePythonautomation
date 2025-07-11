@@ -1,9 +1,9 @@
 import click
 
-from autocli.core.az_rg_checker import ResourceGroupChecker
-from autocli.core.az_rg_create import ResourceGroupCreator
-from autocli.core.az_vnet_checker import VnetChecker
-from autocli.core.az_vnet_create import VirtualNetworkCreator
+from autocli.core.rg.az_rg_checker import ResourceGroupChecker
+from autocli.core.rg.az_rg_create import ResourceGroupCreator
+from autocli.core.network.vnets.az_vnet_checker import VnetChecker
+from autocli.core.network.vnets.az_vnet_create import VirtualNetworkCreator
 from autocli.core.lib.trackingId_util import TrackingIdGenerator
 
 
