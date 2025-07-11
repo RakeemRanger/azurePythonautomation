@@ -1,7 +1,6 @@
-# Ignore log files
-*.log
-logs/
-log/
+# Ignore log files, but keep the logs folder itself
+logs/*
+!logs/.gitkeep
 
 # Ignore Python cache
 __pycache__/

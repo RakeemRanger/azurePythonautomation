@@ -4,9 +4,10 @@ import os
 import time
 
 from azure.identity import DefaultAzureCredential
-from .lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
-from .lib.log_util import logClient
-from .lib.azure_clients import AzureClients
+
+from autocli.lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
+from ..lib.log_util import logClient
+from ..lib.azure_clients import AzureClients
 
 class ResourceGroupCreator:
     """
@@ -19,7 +20,7 @@ class ResourceGroupCreator:
         self.logger = logClient('azureRGcreate')
         self.subscription_id = DEV_AZURE_SUBSCRIPTION
 
-    def rg_create(self) -> str:
+    def rg_create(self) -> dict:
         logger = self.logger
         trackingId = self.trackingId
         rg_name = self.rg_name
@@ -54,7 +55,7 @@ class ResourceGroupCreator:
                 else:
                     state = rg_status.get("properties", {}).get("provisioningState") if rg_status else "Unknown"
 
-                logger.info(f"ResourceGroup: {rg_name} was created with provisioningState: {state}")
+                logger.info(f"ResourceGroup: {rg_name} was created with provisioningState: {state} | correlationId: {correlation_id} | trackingId : {trackingId}")
                 response = {
                     "name": rg_status.get("name") if rg_status else rg_name,
                     "isProvisioned": "Yes" if state == "Succeeded" else "No",

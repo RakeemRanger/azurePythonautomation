@@ -2,10 +2,9 @@ import json
 import requests
 import os
 
-from azure.identity import DefaultAzureCredential
-from .lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
-from .lib.log_util import logClient
-from .lib.azure_clients import AzureClients
+from autocli.lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
+from ..lib.log_util import logClient
+from ..lib.azure_clients import AzureClients
 
 class ResourceGroupChecker:
     """
@@ -19,7 +18,7 @@ class ResourceGroupChecker:
         # You may want to pass subscription_id explicitly, or fetch from env
         self.subscription_id = DEV_AZURE_SUBSCRIPTION
 
-    def rg_check(self) -> str:
+    def rg_check(self) -> dict:
         logger = self.logger
         trackingId = self.trackingId
         rg_name = self.rg_name
@@ -30,7 +29,7 @@ class ResourceGroupChecker:
             correlation_id = resp.headers.get("x-ms-correlation-request-id", "")
             if resp.status_code == 200:
                 results = resp.json()
-                logger.info(f'ResourceGroup: {rg_name} was found')
+                logger.info(f'ResourceGroup: {rg_name} was found | Correlationid: {correlation_id} | trackingId: {trackingId}')
                 response = {
                     "name": results.get("name"),
                     "isProvisioned": True,

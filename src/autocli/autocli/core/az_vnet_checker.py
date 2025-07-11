@@ -2,8 +2,8 @@ import json
 import time
 
 from .az_rg_checker import ResourceGroupChecker
-from .lib.azure_clients import AzureClients
-from .lib.log_util import logClient
+from ..lib.azure_clients import AzureClients
+from ..lib.log_util import logClient
 
 class VnetChecker:
     """
@@ -16,21 +16,23 @@ class VnetChecker:
         self.vnet_name = vnet_name
         self.logger = logClient('azureVNETchecker')
         self.rg_check = ResourceGroupChecker(location=self.location,
-                                             rg_name=self.rg_name, trackingId=self.trackingId)
+                                             rg_name=self.rg_name, trackingId=self.trackingId).rg_check()
 
-    def vnet_check(self) -> str:
+    def vnet_check(self) -> dict:
         rg_name = self.rg_name
         location = self.location
         logger = self.logger
         vnet_name = self.vnet_name
         trackingId = self.trackingId
-
-        logger.info(f'''starting Virtual Network Check Operation for VNET: {vnet_name}\n{{"trackingId": {trackingId}}}''')
-        # Check if RG exists
         rg_exist = self.rg_check
-        if rg_exist:
-            logger.info(f'Resource Group: {rg_name} has been located.')
-            logger.info(f'Will now check if VNET: {vnet_name} exists or not')
+        rg_exist = json.loads(rg_exist)
+        correlation_id = rg_exist["correlationid"]
+
+        logger.info(f'''starting Virtual Network Check Operation for VNET: {vnet_name} |  trackingId: {trackingId}''')
+        # Check if RG exists
+        if rg_exist["isProvisioned"]:
+            logger.info(f'Resource Group: {rg_name} has been located | correlationId: {correlation_id} | trackingId {trackingId}')
+            logger.info(f'Will now check if VNET: {vnet_name} exists or not   | trackingId {trackingId}')
             try:
                 # Use REST API to check VNET
                 resp = AzureClients().az_vnet_api_client(
