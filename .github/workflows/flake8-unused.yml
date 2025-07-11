@@ -19,7 +19,7 @@ jobs:
 
       - name: Install flake8 and plugins
         run: |
-          pip install flake8 flake8-unused-imports flake8-unused-arguments
+          flake8 --select=F401,F841 --show-source .
 
       - name: Run flake8 for unused imports and variables
         run: |
