@@ -24,6 +24,9 @@ class ResourceGroupChecker:
         self.subscription_id = DEV_AZURE_SUBSCRIPTION
 
     def rg_check(self) -> dict:
+        """
+        Rg check
+        """
         logger = self.logger
         trackingId = self.trackingId
         rg_name = self.rg_name
