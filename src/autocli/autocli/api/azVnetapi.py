@@ -4,7 +4,7 @@ from fastapi import FastAPI, APIRouter
 
 from autocli.core.az_vnet_checker import VnetChecker
 from autocli.core.az_vnet_create import VirtualNetworkCreator
-from autocli.lib.trackingId_util import TrackingIdGenerator
+from autocli.core.lib.trackingId_util import TrackingIdGenerator
 
 trackId = TrackingIdGenerator().trackingId()
 router = APIRouter()

@@ -1,6 +1,6 @@
 annotated-types==0.7.0
 anyio==4.9.0
--e git+https://github.com/RakeemRanger/azurePythonautomation.git@1e491fd690209157e97d4120f198c620c7327820#egg=autocli
+-e git+https://github.com/RakeemRanger/azurePythonautomation.git@929c61a37eacbee72c5bb7991fba64958ab08d29#egg=autocli
 azure-common==1.1.28
 azure-core==1.34.0
 azure-identity==1.23.0
@@ -19,6 +19,7 @@ fastapi==0.115.12
 Flask==3.1.1
 guid==0.2.1
 h11==0.16.0
+httptools==0.6.4
 idna==3.10
 isodate==0.7.2
 itsdangerous==2.2.0
@@ -32,6 +33,9 @@ pycparser==2.22
 pydantic==2.11.5
 pydantic_core==2.33.2
 PyJWT==2.10.1
+python-dotenv==1.1.1
+python-multipart==0.0.20
+PyYAML==6.0.2
 requests==2.32.4
 setuptools==80.9.0
 six==1.17.0
@@ -41,5 +45,8 @@ typing-inspection==0.4.1
 typing_extensions==4.14.0
 urllib3==2.4.0
 uvicorn==0.34.3
+uvloop==0.21.0
+watchfiles==1.1.0
 wcwidth==0.2.13
+websockets==15.0.1
 Werkzeug==3.1.3

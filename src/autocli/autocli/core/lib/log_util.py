@@ -2,7 +2,7 @@ import logging
 import os
 import json
 
-from autocli.lib.CONSTANTS import log_folder
+from autocli.core.lib.CONSTANTS import log_folder
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):

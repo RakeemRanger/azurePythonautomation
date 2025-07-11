@@ -4,7 +4,7 @@ import requests
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.network import NetworkManagementClient
 
-from autocli.lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
+from autocli.core.lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
 
 class AzureClients:
     '''
@@ -46,6 +46,8 @@ class AzureClients:
         token = credential.get_token("https://management.azure.com/.default")
         api_version = "2022-09-01"
         url = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{group_name}/providers/Microsoft.Network/virtualNetworks/{vnet_name}?api-version={api_version}"
+        list_rg_url = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{group_name}/providers/Microsoft.Network/virtualNetworks?api-version={api_version}"
+        list_all_url = f"https://management.azure.com/subscriptions/{subscription_id}/providers/Microsoft.Network/virtualNetworks?api-version={api_version}"
         headers = {
             "Authorization": f"Bearer {token.token}",
             "Content-Type": "application/json"
@@ -56,6 +58,10 @@ class AzureClients:
             return requests.put(url=url, headers=headers, json=body)
         elif requestType.lower() == 'delete':
             return requests.delete(url=url, headers=headers)
+        elif requestType.lower() == 'list_rg':
+            return requests.get(url=list_rg_url, headers=headers)
+        elif requestType.lower() == 'list_all':
+            return requests.get(url=list_all_url, headers=headers)
         else:
             return None
 
