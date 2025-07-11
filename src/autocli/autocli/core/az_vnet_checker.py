@@ -5,20 +5,23 @@ from .az_rg_checker import ResourceGroupChecker
 from ..core.lib.azure_clients import AzureClients
 from ..core.lib.log_util import logClient
 
+
 class VnetChecker:
     """
     Class to check if virtual network resources are available using Azure REST API.
     """
+
     def __init__(self, location: str, rg_name: str, vnet_name: str, trackingId: str) -> None:
         self.trackingId = str(trackingId)
         self.location = location
         self.rg_name = rg_name
         self.vnet_name = vnet_name
-        self.logger = logClient('azureVNETchecker')
-        self.rg_check = ResourceGroupChecker(location=self.location,
-                                             rg_name=self.rg_name, trackingId=self.trackingId).rg_check()
+        self.logger = logClient("azureVNETchecker")
+        self.rg_check = ResourceGroupChecker(
+            location=self.location, rg_name=self.rg_name, trackingId=self.trackingId
+        ).rg_check()
 
-    def vnet_check(self) -> dict: 
+    def vnet_check(self) -> dict:
         rg_name = self.rg_name
         location = self.location
         logger = self.logger
@@ -28,18 +31,16 @@ class VnetChecker:
         rg_exist = json.loads(rg_exist)
         correlation_id = rg_exist["correlationid"]
 
-        logger.info(f'''starting Virtual Network Check Operation for VNET: {vnet_name} |  trackingId: {trackingId}''')
+        logger.info(f"""starting Virtual Network Check Operation for VNET: {vnet_name} |  trackingId: {trackingId}""")
         # Check if RG exists
         if rg_exist["isProvisioned"]:
-            logger.info(f'Resource Group: {rg_name} has been located | correlationId: {correlation_id} | trackingId {trackingId}')
-            logger.info(f'Will now check if VNET: {vnet_name} exists or not   | trackingId {trackingId}')
+            logger.info(
+                f"Resource Group: {rg_name} has been located | correlationId: {correlation_id} | trackingId {trackingId}"
+            )
+            logger.info(f"Will now check if VNET: {vnet_name} exists or not   | trackingId {trackingId}")
             try:
                 # Use REST API to check VNET
-                resp = AzureClients().az_vnet_api_client(
-                    group_name=rg_name,
-                    vnet_name=vnet_name,
-                    requestType='check'
-                )
+                resp = AzureClients().az_vnet_api_client(group_name=rg_name, vnet_name=vnet_name, requestType="check")
                 correlation_id = resp.headers.get("x-ms-correlation-request-id", "")
                 if resp.status_code == 200:
                     results = resp.json()
@@ -48,7 +49,9 @@ class VnetChecker:
                     poll_interval = 2  # seconds
                     vnet_status = results
                     state = vnet_status.get("properties", {}).get("provisioningState")
-                    address_prefixes = vnet_status.get("properties", {}).get("addressSpace", {}).get("addressPrefixes", [])
+                    address_prefixes = (
+                        vnet_status.get("properties", {}).get("addressSpace", {}).get("addressPrefixes", [])
+                    )
                     vnet_prefix = address_prefixes[0] if address_prefixes else ""
                     for _ in range(poll_attempts):
                         if state == "Succeeded":
@@ -58,14 +61,14 @@ class VnetChecker:
                             break
                         time.sleep(poll_interval)
                         status_resp = AzureClients().az_vnet_api_client(
-                            group_name=rg_name,
-                            vnet_name=vnet_name,
-                            requestType='check'
+                            group_name=rg_name, vnet_name=vnet_name, requestType="check"
                         )
                         if status_resp.status_code == 200:
                             vnet_status = status_resp.json()
                             state = vnet_status.get("properties", {}).get("provisioningState")
-                            address_prefixes = vnet_status.get("properties", {}).get("addressSpace", {}).get("addressPrefixes", [])
+                            address_prefixes = (
+                                vnet_status.get("properties", {}).get("addressSpace", {}).get("addressPrefixes", [])
+                            )
                             vnet_prefix = address_prefixes[0] if address_prefixes else ""
                         else:
                             break
@@ -81,7 +84,7 @@ class VnetChecker:
                         "ReturnCode": resp.status_code,
                         "message": f"Virtual Network: {vnet_name} was created with provisioningState: {state}",
                         "trackingId": trackingId,
-                        "correlationid": correlation_id
+                        "correlationid": correlation_id,
                     }
                     response = json.dumps(response, indent=4)
                     logger.info(response)
@@ -98,7 +101,7 @@ class VnetChecker:
                         "ReturnCode": 404,
                         "message": f"Virtual Network: {vnet_name} Not found.",
                         "trackingId": trackingId,
-                        "correlationid": correlation_id
+                        "correlationid": correlation_id,
                     }
                     response = json.dumps(response, indent=4)
                     logger.info(response)
@@ -115,7 +118,7 @@ class VnetChecker:
                         "ReturnCode": resp.status_code,
                         "message": f"Issue checking for Virtual Network: {vnet_name}: {resp.text}",
                         "trackingId": trackingId,
-                        "correlationid": correlation_id
+                        "correlationid": correlation_id,
                     }
                     response = json.dumps(response, indent=4)
                     logger.info(response)
@@ -133,7 +136,7 @@ class VnetChecker:
                     "ReturnCode": 500,
                     "message": f"Issue checking for Virtual Network: {vnet_name}:\n{e}",
                     "trackingId": trackingId,
-                    "correlationid": ""
+                    "correlationid": "",
                 }
                 response = json.dumps(response, indent=4)
                 logger.info(response)
@@ -151,7 +154,7 @@ class VnetChecker:
                 "ReturnCode": 404,
                 "message": f"Resource Group: {rg_name} not found.",
                 "trackingId": trackingId,
-                "correlationid": ""
+                "correlationid": "",
             }
             response = json.dumps(response, indent=4)
             logger.info(response)

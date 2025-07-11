@@ -9,15 +9,17 @@ from autocli.core.lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
 from ..core.lib.log_util import logClient
 from ..core.lib.azure_clients import AzureClients
 
+
 class ResourceGroupCreator:
     """
     Class to handle Resource Group creation using Azure REST API.
     """
+
     def __init__(self, rg_name: str, location: str, trackingId: str):
         self.rg_name = rg_name
         self.location = location
         self.trackingId = str(trackingId)
-        self.logger = logClient('azureRGcreate')
+        self.logger = logClient("azureRGcreate")
         self.subscription_id = DEV_AZURE_SUBSCRIPTION
 
     def rg_create(self) -> dict:
@@ -26,9 +28,7 @@ class ResourceGroupCreator:
         rg_name = self.rg_name
         location = self.location
         api_client = AzureClients().az_group_api_client(
-            group_name=rg_name,
-            requestType='CREATE',
-            body={"location": location}
+            group_name=rg_name, requestType="CREATE", body={"location": location}
         )
         try:
             resp = api_client
@@ -39,10 +39,7 @@ class ResourceGroupCreator:
                 poll_interval = 2  # seconds
                 rg_status = None
                 for _ in range(poll_attempts):
-                    status_resp = AzureClients().az_group_api_client(
-                        group_name=rg_name,
-                        requestType='check'
-                    )
+                    status_resp = AzureClients().az_group_api_client(group_name=rg_name, requestType="check")
                     if status_resp.status_code == 200:
                         rg_status = status_resp.json()
                         state = rg_status.get("properties", {}).get("provisioningState")
@@ -55,7 +52,9 @@ class ResourceGroupCreator:
                 else:
                     state = rg_status.get("properties", {}).get("provisioningState") if rg_status else "Unknown"
 
-                logger.info(f"ResourceGroup: {rg_name} was created with provisioningState: {state} | correlationId: {correlation_id} | trackingId : {trackingId}")
+                logger.info(
+                    f"ResourceGroup: {rg_name} was created with provisioningState: {state} | correlationId: {correlation_id} | trackingId : {trackingId}"
+                )
                 response = {
                     "name": rg_status.get("name") if rg_status else rg_name,
                     "isProvisioned": "Yes" if state == "Succeeded" else "No",
@@ -64,7 +63,7 @@ class ResourceGroupCreator:
                     "ReturnCode": resp.status_code,
                     "message": f"ResourceGroup: {rg_name} was created with provisioningState: {state}",
                     "trackingId": trackingId,
-                    "correlationid": correlation_id
+                    "correlationid": correlation_id,
                 }
                 response = json.dumps(response, indent=4)
                 logger.info(response)
@@ -79,7 +78,7 @@ class ResourceGroupCreator:
                     "ReturnCode": resp.status_code,
                     "message": f"Issue creating Resource Group: {rg_name}: {resp.text}",
                     "trackingId": trackingId,
-                    "correlationid": correlation_id
+                    "correlationid": correlation_id,
                 }
                 response = json.dumps(response, indent=4)
                 logger.info(response)
@@ -94,7 +93,7 @@ class ResourceGroupCreator:
                 "ReturnCode": 500,
                 "message": f"Exception creating Resource Group: {rg_name}: {e}",
                 "trackingId": trackingId,
-                "correlationid": ""
+                "correlationid": "",
             }
             response = json.dumps(response, indent=4)
             logger.info(response)
