@@ -2,7 +2,6 @@ import json
 import ipaddress
 import time
 
-from ...rg.az_rg_checker import ResourceGroupChecker
 from autocli.core.rg.az_rg_create import ResourceGroupCreator
 from autocli.core.lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
 from ...lib.log_util import logClient

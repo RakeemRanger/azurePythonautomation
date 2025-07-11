@@ -6,4 +6,3 @@ class APIRouterGenerator:
         self,
     ):
         self.router = APIRouter()
-        router = self.router
