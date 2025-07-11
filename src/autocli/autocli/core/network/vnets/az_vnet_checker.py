@@ -1,9 +1,9 @@
 import json
 import time
 
-from .az_rg_checker import ResourceGroupChecker
-from ..core.lib.azure_clients import AzureClients
-from ..core.lib.log_util import logClient
+from ...rg.az_rg_checker import ResourceGroupChecker
+from ...lib.azure_clients import AzureClients
+from ...lib.log_util import logClient
 
 
 class VnetChecker:

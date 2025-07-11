@@ -4,8 +4,8 @@ import os
 import time
 
 from autocli.core.lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
-from ..core.lib.log_util import logClient
-from ..core.lib.azure_clients import AzureClients
+from ..lib.log_util import logClient
+from ..lib.azure_clients import AzureClients
 
 
 class ResourceGroupCreator:
@@ -21,6 +21,9 @@ class ResourceGroupCreator:
         self.subscription_id = DEV_AZURE_SUBSCRIPTION
 
     def rg_create(self) -> dict:
+        """
+        RG Creation Method automation
+        """
         logger = self.logger
         trackingId = self.trackingId
         rg_name = self.rg_name
@@ -60,6 +63,45 @@ class ResourceGroupCreator:
                     "id": rg_status.get("id") if rg_status else "",
                     "ReturnCode": resp.status_code,
                     "message": f"ResourceGroup: {rg_name} was created with provisioningState: {state}",
+                    "trackingId": trackingId,
+                    "correlationid": correlation_id,
+                }
+                response = json.dumps(response, indent=4)
+                logger.info(response)
+                return response
+            elif resp.status_code == 409:
+                # Handle resource group already exists in another location
+                error_json = resp.json()
+                error_code = error_json.get("error", {}).get("code")
+                error_message = error_json.get("error", {}).get("message", "")
+                if error_code == "InvalidResourceGroupLocation" and "already exists" in error_message:
+                    # Fetch the existing RG details
+                    check_resp = AzureClients().az_group_api_client(group_name=rg_name, requestType="check")
+                    if check_resp.status_code == 200:
+                        rg_status = check_resp.json()
+                        existing_location = rg_status.get("location", "Unknown")
+                        response = {
+                            "name": rg_name,
+                            "isProvisioned": "Yes",
+                            "location": existing_location,
+                            "id": rg_status.get("id", ""),
+                            "ReturnCode": 200,
+                            "message": f"Resource Group: {rg_name} already exists in location '{existing_location}'. You requested '{location}'.",
+                            "trackingId": trackingId,
+                            "correlationid": check_resp.headers.get("x-ms-correlation-request-id", ""),
+                        }
+                        response = json.dumps(response, indent=4)
+                        logger.info(response)
+                        return response
+                # Default error handling for other 409s
+                logger.error(f"Issue creating Resource Group: {rg_name}: {resp.text}")
+                response = {
+                    "name": rg_name,
+                    "isProvisioned": "Unknown",
+                    "location": location,
+                    "id": "",
+                    "ReturnCode": resp.status_code,
+                    "message": f"Issue creating Resource Group: {rg_name}: {resp.text}",
                     "trackingId": trackingId,
                     "correlationid": correlation_id,
                 }
