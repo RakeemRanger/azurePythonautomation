@@ -27,14 +27,14 @@ These utilities are not specific to any single interface or business domain, but
 
 ---
 
-## Example Structure
+## Current Structure
 
 ```
 lib/
-├── azure_clients.py
-├── log_util.py
-├── trackingId_util.py
-├── CONSTANTS.py
+├── azure_clients.py         # Azure REST API and SDK client helpers
+├── log_util.py             # JSON logging utilities
+├── trackingId_util.py      # Unique tracking ID generator
+├── CONSTANTS.py            # Centralized constants and config
 └── (other utility modules)
 ```
 
@@ -53,6 +53,7 @@ lib/
 - Keep utility code modular and interface-agnostic.
 - Document each utility for clarity and maintainability.
 - Use JSON logging for easy integration with log analytics platforms.
+- Centralize configuration and constants for maintainability.
 
 ---
 

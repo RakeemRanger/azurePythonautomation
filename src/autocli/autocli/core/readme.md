@@ -45,15 +45,23 @@ This greatly enhances troubleshooting, root cause analysis, and compliance audit
 
 ---
 
-## Example Structure
+## Current Structure
 
 ```
 core/
-├── az_rg_create.py
-├── az_rg_checker.py
-├── az_vnet_create.py
-├── az_vnet_checker.py
-└── (other core logic modules)
+├── network/
+│   └── vnets/
+│       ├── az_vnet_checker.py
+│       ├── az_vnet_create.py
+├── rg/
+│   ├── az_rg_checker.py
+│   ├── az_rg_create.py
+├── lib/
+│   ├── azure_clients.py
+│   ├── log_util.py
+│   ├── trackingId_util.py
+│   └── CONSTANTS.py
+└── readme.md
 ```
 
 ---

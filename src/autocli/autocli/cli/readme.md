@@ -29,7 +29,7 @@ python cli.py <command> [ARGS...]
 
 ### **Module Execution (from project root)**
 ```sh
-python -m autocli.cli.cli <command> [ARGS...]
+python -m src.autocli.autocli.cli.cli <command> [ARGS...]
 ```
 
 ---
@@ -71,6 +71,12 @@ python cli.py check-vnet demo.eastus.rg eastus demo.eastus.vnet
 python cli.py create-vnet demo.eastus.rg eastus demo.eastus.vnet
 ```
 
+Or from the project root using module execution:
+```sh
+python -m src.autocli.autocli.cli.cli check-rg demo.eastus.rg eastus
+python -m src.autocli.autocli.cli.cli create-vnet demo.eastus.rg eastus demo.eastus.vnet
+```
+
 ---
 
 ## Notes
@@ -79,6 +85,7 @@ python cli.py create-vnet demo.eastus.rg eastus demo.eastus.vnet
 - Each command generates a unique tracking ID for traceability.
 - All operations are logged in JSON format for easy ingestion into log analytics platforms.
 - Make sure your Azure credentials and subscription ID are set up before running commands.
+- For best results, run commands from the project root using the module path.
 
 ---
 
