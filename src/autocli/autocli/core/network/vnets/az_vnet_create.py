@@ -2,11 +2,11 @@ import json
 import ipaddress
 import time
 
-from .az_rg_checker import ResourceGroupChecker
-from autocli.core.az_rg_create import ResourceGroupCreator
+from ...rg.az_rg_checker import ResourceGroupChecker
+from autocli.core.rg.az_rg_create import ResourceGroupCreator
 from autocli.core.lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
-from ..core.lib.log_util import logClient
-from ..core.lib.azure_clients import AzureClients
+from ...lib.log_util import logClient
+from ...lib.azure_clients import AzureClients
 
 
 class VirtualNetworkCreator:
@@ -151,6 +151,58 @@ class VirtualNetworkCreator:
                     "id": vnet_status.get("id") if vnet_status else "",
                     "ReturnCode": resp.status_code,
                     "message": f"Virtual Network: {vnet_name} was created with provisioningState: {state}",
+                    "trackingId": trackingId,
+                    "correlationid": correlation_id,
+                }
+                response = json.dumps(response, indent=4)
+                logger.info(response)
+                return response
+            elif resp.status_code == 409:
+                # Handle resource already exists in another location
+                error_json = resp.json()
+                error_code = error_json.get("error", {}).get("code")
+                error_message = error_json.get("error", {}).get("message", "")
+                if error_code == "InvalidResourceLocation" and "already exists" in error_message:
+                    # Fetch the existing VNet details
+                    check_resp = self.api_client.az_vnet_api_client(
+                        group_name=rg_name, vnet_name=vnet_name, requestType="check"
+                    )
+                    if check_resp.status_code == 200:
+                        vnet_status = check_resp.json()
+                        address_prefixes = vnet_status.get("properties", {}).get("addressSpace", {}).get("addressPrefixes", [])
+                        vnet_prefix = address_prefixes[0] if address_prefixes else "Unknown"
+                        state = vnet_status.get("properties", {}).get("provisioningState", "Unknown")
+                        existing_location = vnet_status.get("location", "Unknown")
+                        response = {
+                            "name": vnet_name,
+                            "addressPrefix": vnet_prefix,
+                            "resourceGroup": rg_name,
+                            "isProvisioned": "Yes",
+                            "provisioningState": state,
+                            "location": existing_location,  # Always use actual location
+                            "id": vnet_status.get("id", ""),
+                            "ReturnCode": 200,
+                            "message": f"Virtual Network: {vnet_name} already exists in location '{existing_location}'. You requested '{location}'.",
+                            "trackingId": trackingId,
+                            "correlationid": correlation_id,
+                        }
+                        response = json.dumps(response, indent=4)
+                        logger.info(response)
+                        return response
+                # ...existing error logic...
+                logger.error(
+                    f"Issue creating Virtual Network: {vnet_name}: {resp.text} | correlationId: {correlation_id} | trackingId {trackingId}"
+                )
+                response = {
+                    "name": vnet_name,
+                    "addressPrefix": "Unknown",
+                    "resourceGroup": rg_name,
+                    "isProvisioned": "Unknown",
+                    "provisioningState": "Unknown",
+                    "location": location,
+                    "id": "",
+                    "ReturnCode": resp.status_code,
+                    "message": f"Issue creating Virtual Network: {vnet_name}: {resp.text}",
                     "trackingId": trackingId,
                     "correlationid": correlation_id,
                 }

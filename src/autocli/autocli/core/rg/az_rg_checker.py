@@ -1,8 +1,8 @@
 import json
 
 from autocli.core.lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
-from ..core.lib.log_util import logClient
-from ..core.lib.azure_clients import AzureClients
+from ..lib.log_util import logClient
+from ..lib.azure_clients import AzureClients
 
 
 class ResourceGroupChecker:
