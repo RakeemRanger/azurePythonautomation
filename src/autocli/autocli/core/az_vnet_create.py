@@ -4,9 +4,9 @@ import time
 
 from .az_rg_checker import ResourceGroupChecker
 from autocli.core.az_rg_create import ResourceGroupCreator
-from autocli.lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
-from ..lib.log_util import logClient
-from ..lib.azure_clients import AzureClients
+from autocli.core.lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
+from ..core.lib.log_util import logClient
+from ..core.lib.azure_clients import AzureClients
 
 class VirtualNetworkCreator:
     """
@@ -19,19 +19,28 @@ class VirtualNetworkCreator:
         self.trackingId = str(trackingId)
         self.logger = logClient('azureVNETcreate')
         self.subscription_id = DEV_AZURE_SUBSCRIPTION
+        self.api_client = AzureClients()
 
     def prefix_builder(self) -> str:
-        """
-        Finds the next available /16 VNET prefix by checking all existing VNets in the subscription.
-        Returns the next available /16 prefix as a string (e.g., '10.21.0.0/16').
-        """
         logger = self.logger
-        net_client = AzureClients().az_network_client()
-        logger.info('Fetching next usable VNET prefix')
+        # List all VNets in the subscription
+        resp = self.api_client.az_vnet_api_client(
+            group_name="",  # Not needed for list_all
+            vnet_name="",
+            requestType="list_all"
+        )
+        logger.info('Fetching next usable VNET prefix via Azure REST API (subscription-wide)')
         try:
+            resp.raise_for_status()
+            vnets = resp.json().get("value", [])
             vnet_prefixes = []
-            for vnet in net_client.virtual_networks.list_all():
-                for addr_space in vnet.address_space.address_prefixes:
+            for vnet in vnets:
+                address_prefixes = (
+                    vnet.get("properties", {})
+                    .get("addressSpace", {})
+                    .get("addressPrefixes", [])
+                )
+                for addr_space in address_prefixes:
                     if addr_space.endswith('/16'):
                         vnet_prefixes.append(addr_space)
             if not vnet_prefixes:
@@ -44,7 +53,7 @@ class VirtualNetworkCreator:
             logger.info(f'Next available VNET prefix: {next_network.with_prefixlen}')
             return next_network.with_prefixlen
         except Exception as e:
-            logger.error(f"Error fetching next VNET prefix: {e}")
+            logger.error(f"Error fetching next VNET prefix via REST API: {e}")
             return '10.0.0.0/16'
 
     def vnet_create(self) -> dict:
@@ -55,10 +64,11 @@ class VirtualNetworkCreator:
         vnet_name = self.vnet_name
 
         # --- Ensure Resource Group exists ---
-        rg_check_resp = AzureClients().az_group_api_client(
+        rg_check_resp = self.api_client.az_group_api_client(
             group_name=rg_name,
             requestType='check'
         )
+        correlation_id = ""
         if rg_check_resp.status_code != 200:
             logger.info(f"Resource group {rg_name} not found. Creating it... | correlationId: {correlation_id} | trackingId {trackingId}")
             rg_creator = ResourceGroupCreator(rg_name=rg_name, location=location, trackingId=trackingId)
@@ -86,7 +96,7 @@ class VirtualNetworkCreator:
                 }
 
         # Check if VNet exists first
-        check_resp = AzureClients().az_vnet_api_client(
+        check_resp = self.api_client.az_vnet_api_client(
             group_name=rg_name,
             vnet_name=vnet_name,
             requestType='check'
@@ -109,7 +119,7 @@ class VirtualNetworkCreator:
             }
         }
 
-        api_client = AzureClients().az_vnet_api_client(
+        api_client = self.api_client.az_vnet_api_client(
             group_name=rg_name,
             vnet_name=vnet_name,
             requestType='CREATE',
@@ -124,7 +134,7 @@ class VirtualNetworkCreator:
                 poll_interval = 2  # seconds
                 vnet_status = None
                 for _ in range(poll_attempts):
-                    status_resp = AzureClients().az_vnet_api_client(
+                    status_resp = self.api_client.az_vnet_api_client(
                         group_name=rg_name,
                         vnet_name=vnet_name,
                         requestType='check'
