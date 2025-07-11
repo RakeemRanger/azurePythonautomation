@@ -1,0 +1,18 @@
+# Ignore log files, but keep the logs folder itself
+logs/*
+!logs/.gitkeep
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# VS Code settings (optional)
+.vscode/
+
+# Ignore CONSTANTS file
+src/autocli/autocli/cli/lib/CONSTANTS.py
+
+# Ignore build metadata
+autocli.egg-info/
+autocli.egg-info/*

@@ -1,0 +1,5 @@
+[[rules]]
+id = "hardcoded-password-assignment"
+description = "Hardcoded password assignment"
+regex = '''(?i)(password|passwd|pwd)\s*=\s*["'].*["']'''
+tags = ["key", "password"]
