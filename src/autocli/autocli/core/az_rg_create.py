@@ -21,6 +21,9 @@ class ResourceGroupCreator:
         self.subscription_id = DEV_AZURE_SUBSCRIPTION
 
     def rg_create(self) -> dict:
+        """
+        RG Creation Method
+        """
         logger = self.logger
         trackingId = self.trackingId
         rg_name = self.rg_name
