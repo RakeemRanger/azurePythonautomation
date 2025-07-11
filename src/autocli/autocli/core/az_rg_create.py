@@ -3,8 +3,6 @@ import requests
 import os
 import time
 
-from azure.identity import DefaultAzureCredential
-
 from autocli.core.lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
 from ..core.lib.log_util import logClient
 from ..core.lib.azure_clients import AzureClients

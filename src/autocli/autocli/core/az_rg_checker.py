@@ -1,6 +1,4 @@
 import json
-import requests
-import os
 
 from autocli.core.lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
 from ..core.lib.log_util import logClient
