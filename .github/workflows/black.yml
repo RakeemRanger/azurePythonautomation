@@ -24,4 +24,4 @@ jobs:
         run: pip install black
 
       - name: Run Black (PEP8 line length 79)
-        run: black . --line-length 79 .
+        run: black  --line-length 79 .
