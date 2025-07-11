@@ -196,4 +196,3 @@ class VirtualNetworkCreator:
             response = json.dumps(response, indent=4)
             logger.info(response)
             return response
-

@@ -16,7 +16,6 @@ def check_resource_group(rg_name: str, location: str):
     response = json.loads(response)
     return response
 
-
 @router.post("/location/{location}/resourceGroup/{rg_name}")
 def create_resource_group(rg_name: str, location: str):
     creator = ResourceGroupCreator(location=location, rg_name=rg_name, trackingId=trackId)

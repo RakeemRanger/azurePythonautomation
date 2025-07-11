@@ -2,7 +2,6 @@ import json
 import requests
 import os
 
-from azure.identity import DefaultAzureCredential
 from autocli.lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION
 from ..lib.log_util import logClient
 from ..lib.azure_clients import AzureClients
