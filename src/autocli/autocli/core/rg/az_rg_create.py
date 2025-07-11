@@ -1,6 +1,4 @@
 import json
-import requests
-import os
 import time
 
 from autocli.core.lib.CONSTANTS import DEV_AZURE_SUBSCRIPTION

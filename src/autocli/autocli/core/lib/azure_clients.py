@@ -1,4 +1,3 @@
-import os
 import requests
 
 from azure.identity import DefaultAzureCredential
