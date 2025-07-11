@@ -18,7 +18,7 @@ class VnetChecker:
         self.rg_check = ResourceGroupChecker(location=self.location,
                                              rg_name=self.rg_name, trackingId=self.trackingId).rg_check()
 
-    def vnet_check(self) -> dict:
+    def vnet_check(self) -> dict: 
         rg_name = self.rg_name
         location = self.location
         logger = self.logger
