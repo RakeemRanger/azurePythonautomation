@@ -169,7 +169,9 @@ class VirtualNetworkCreator:
                     )
                     if check_resp.status_code == 200:
                         vnet_status = check_resp.json()
-                        address_prefixes = vnet_status.get("properties", {}).get("addressSpace", {}).get("addressPrefixes", [])
+                        address_prefixes = (
+                            vnet_status.get("properties", {}).get("addressSpace", {}).get("addressPrefixes", [])
+                        )
                         vnet_prefix = address_prefixes[0] if address_prefixes else "Unknown"
                         state = vnet_status.get("properties", {}).get("provisioningState", "Unknown")
                         existing_location = vnet_status.get("location", "Unknown")
