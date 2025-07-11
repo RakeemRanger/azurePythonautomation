@@ -1,3 +1,0 @@
-{"timestamp": "2025-07-10 15:15:12,175", "level": "INFO", "message": "ResourceGroup: demo.eastus.rg was found | Correlationid: 509412c6-6a99-4442-b77c-48ea6f1b4440 | trackingId: c2e9a8a9-7a06-471f-8995-9af56e2f7775", "logger": "azureRGchecker.log"}
-{"timestamp": "2025-07-10 15:16:30,936", "level": "INFO", "message": "ResourceGroup: demo.eastus.rg was found | Correlationid: 72fda400-5cbe-4c2b-85d1-deb474c5d286 | trackingId: a4388487-280f-4a0b-85e3-085f5081de9a", "logger": "azureRGchecker.log"}
-{"timestamp": "2025-07-11 06:24:42,816", "level": "INFO", "message": "ResourceGroup: demo.uksouth.rg was found | Correlationid: e841a442-f680-4016-9967-e1592658009c | trackingId: d05941db-d9d6-45b0-b059-753731c826d2", "logger": "azureRGchecker.log"}
