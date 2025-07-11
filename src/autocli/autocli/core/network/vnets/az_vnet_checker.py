@@ -8,7 +8,7 @@ from ...lib.log_util import logClient
 
 class VnetChecker:
     """
-    Class to check if virtual network resources are available using Azure REST API.
+    Class to Check if virtual network resources are available using Azure REST API.
     """
 
     def __init__(self, location: str, rg_name: str, vnet_name: str, trackingId: str) -> None:
